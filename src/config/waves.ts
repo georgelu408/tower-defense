@@ -18,7 +18,8 @@ export function getWaveConfig(wave: number): WaveConfig {
   const composition: EnemyType[] = [];
   for (let i = 0; i < enemyCount; i++) {
     const isTank = wave >= 4 && i % 3 === 2;
-    composition.push(isTank ? 'tank' : 'grunt');
+    const isFast = wave >= 3 && i % 4 === 1;
+    composition.push(isTank ? 'tank' : isFast ? 'fast' : 'grunt');
   }
 
   return { baseHP, goldReward, composition };

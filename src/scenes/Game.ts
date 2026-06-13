@@ -1,9 +1,11 @@
 import Phaser from 'phaser';
 import { BOARD_WIDTH, BOARD_HEIGHT, GRID_SIZE, GRID_COLS, GRID_ROWS } from '../config/constants';
 import { PATH, SPAWN, BASE } from '../config/level';
-import { cellToWorld } from '../systems/Grid';
+import { cellToWorld, cellKey, worldToCell } from '../systems/Grid';
 import { Enemy } from '../entities/Enemy';
 import { ENEMY_TYPES } from '../config/enemies';
+import { Tower } from '../entities/Tower';
+import { TOWER_TYPES } from '../config/towers';
 
 const GRASS_COLOR = 0x3b6d11;
 const PATH_COLOR = 0xba7517;
@@ -13,6 +15,8 @@ const SPAWN_INTERVAL_MS = 2000;
 export class Game extends Phaser.Scene {
   private waypoints: { x: number; y: number }[] = [];
   private enemies: Enemy[] = [];
+  private pathCells = new Set<string>();
+  private occupiedCells = new Set<string>();
 
   constructor() {
     super('Game');
@@ -22,6 +26,7 @@ export class Game extends Phaser.Scene {
     this.add.rectangle(0, 0, BOARD_WIDTH, BOARD_HEIGHT, GRASS_COLOR).setOrigin(0, 0);
 
     for (const cell of PATH) {
+      this.pathCells.add(cellKey(cell));
       this.add
         .rectangle(cell.col * GRID_SIZE, cell.row * GRID_SIZE, GRID_SIZE, GRID_SIZE, PATH_COLOR)
         .setOrigin(0, 0);
@@ -37,6 +42,10 @@ export class Game extends Phaser.Scene {
       delay: SPAWN_INTERVAL_MS,
       loop: true,
       callback: () => this.spawnEnemy(),
+    });
+
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      this.tryPlaceTower(pointer.x, pointer.y);
     });
   }
 
@@ -54,6 +63,18 @@ export class Game extends Phaser.Scene {
       }
       return true;
     });
+  }
+
+  private tryPlaceTower(x: number, y: number) {
+    if (x < 0 || y < 0 || x >= BOARD_WIDTH || y >= BOARD_HEIGHT) return;
+
+    const cell = worldToCell(x, y);
+    const key = cellKey(cell);
+
+    if (this.pathCells.has(key) || this.occupiedCells.has(key)) return;
+
+    this.occupiedCells.add(key);
+    new Tower(this, cell, cellToWorld(cell), TOWER_TYPES.arrow);
   }
 
   private spawnEnemy() {

@@ -4,7 +4,7 @@ import { Game } from './scenes/Game';
 import { UI } from './scenes/UI';
 import { GAME_WIDTH, GAME_HEIGHT } from './config/constants';
 
-new Phaser.Game({
+const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'app',
   width: GAME_WIDTH,
@@ -12,3 +12,7 @@ new Phaser.Game({
   backgroundColor: '#1d1d1d',
   scene: [Boot, Game, UI],
 });
+
+if (import.meta.env.DEV) {
+  (window as unknown as { __game: Phaser.Game }).__game = game;
+}

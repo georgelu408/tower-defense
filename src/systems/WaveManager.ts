@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { getWaveConfig, SPAWN_INTERVAL_MS, WAVE_BREAK_MS, WAVE_COUNT } from '../config/waves';
+import { getWaveConfig, WAVE_BREAK_MS, WAVE_COUNT } from '../config/waves';
 import type { EnemyType } from '../config/enemies';
 
 export class WaveManager {
@@ -34,12 +34,12 @@ export class WaveManager {
     const config = getWaveConfig(wave);
 
     config.composition.forEach((type, i) => {
-      this.scene.time.delayedCall(i * SPAWN_INTERVAL_MS, () => {
+      this.scene.time.delayedCall(i * config.spawnIntervalMs, () => {
         this.onSpawn(type, config.baseHP, config.goldReward);
       });
     });
 
-    const waveDuration = config.composition.length * SPAWN_INTERVAL_MS;
+    const waveDuration = config.composition.length * config.spawnIntervalMs;
     this.scene.time.delayedCall(waveDuration + WAVE_BREAK_MS, () => this.scheduleWave(wave + 1));
   }
 }

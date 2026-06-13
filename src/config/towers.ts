@@ -15,7 +15,7 @@ export interface TowerDef {
 
 export const TOWER_TYPES = {
   arrow: {
-    range: 140,
+    range: 90,
     fireRate: 2,
     damage: 10,
     cost: 50,
@@ -27,7 +27,7 @@ export const TOWER_TYPES = {
     description: 'Fires quickly, low damage',
   },
   cannon: {
-    range: 110,
+    range: 80,
     fireRate: 0.5,
     damage: 20,
     cost: 100,
@@ -40,7 +40,7 @@ export const TOWER_TYPES = {
     description: 'Fires slowly, splash damage',
   },
   slow: {
-    range: 120,
+    range: 85,
     fireRate: 1,
     damage: 5,
     cost: 75,

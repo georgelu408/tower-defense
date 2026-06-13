@@ -24,7 +24,7 @@ import { BUILD_SLOTS } from '../config/slots';
 const GRASS_COLOR = 0x3b6d11;
 const PATH_COLOR = 0xba7517;
 const GRID_LINE_COLOR = 0x000000;
-const SLOT_COLOR = 0xf2d680;
+const SLOT_COLOR = 0x4fd1ff;
 
 export class Game extends Phaser.Scene {
   private waypoints: { x: number; y: number }[] = [];
@@ -67,8 +67,8 @@ export class Game extends Phaser.Scene {
       const key = cellKey(cell);
       this.slotCells.add(key);
       const { x, y } = cellToWorld(cell);
-      const marker = this.add.circle(x, y, GRID_SIZE * 0.35, SLOT_COLOR, 0.25);
-      marker.setStrokeStyle(2, SLOT_COLOR, 0.6);
+      const marker = this.add.circle(x, y, GRID_SIZE * 0.35, SLOT_COLOR, 0.2);
+      marker.setStrokeStyle(2, SLOT_COLOR, 0.9);
       this.slotMarkers.set(key, marker);
     }
 

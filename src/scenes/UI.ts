@@ -3,8 +3,8 @@ import { BOARD_HEIGHT, BOARD_WIDTH, UI_BAR_HEIGHT } from '../config/constants';
 import { TOWER_TYPES } from '../config/towers';
 import type { TowerType } from '../config/towers';
 
-const BUTTON_WIDTH = 140;
-const BUTTON_HEIGHT = 70;
+const BUTTON_WIDTH = 150;
+const BUTTON_HEIGHT = 96;
 const BUTTON_COLOR = 0x3f3f3a;
 const BUTTON_SELECTED_COLOR = 0x5d7a3a;
 
@@ -34,7 +34,7 @@ export class UI extends Phaser.Scene {
         .setInteractive({ useHandCursor: true });
 
       this.add
-        .text(x, y - 12, `${def.label}`, {
+        .text(x, y - 32, `${def.label}`, {
           fontFamily: 'sans-serif',
           fontSize: '16px',
           color: '#ffffff',
@@ -42,10 +42,20 @@ export class UI extends Phaser.Scene {
         .setOrigin(0.5);
 
       this.add
-        .text(x, y + 14, `${def.cost} gold`, {
+        .text(x, y - 10, `${def.cost} gold`, {
           fontFamily: 'sans-serif',
           fontSize: '14px',
           color: '#d8d8d0',
+        })
+        .setOrigin(0.5);
+
+      this.add
+        .text(x, y + 16, def.description, {
+          fontFamily: 'sans-serif',
+          fontSize: '12px',
+          color: '#aaaaaa',
+          align: 'center',
+          wordWrap: { width: BUTTON_WIDTH - 12 },
         })
         .setOrigin(0.5);
 

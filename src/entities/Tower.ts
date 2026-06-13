@@ -36,18 +36,18 @@ export class Tower extends Phaser.GameObjects.Container {
     return new Projectile(this.scene, { x: this.x, y: this.y }, target, this.def);
   }
 
+  /** Targets the enemy furthest along the path (closest to the base) within range. */
   private findTarget(enemies: Enemy[]): Enemy | null {
-    let closest: Enemy | null = null;
-    let closestDistance = this.def.range;
+    let best: Enemy | null = null;
 
     for (const enemy of enemies) {
       const distance = Phaser.Math.Distance.Between(this.x, this.y, enemy.x, enemy.y);
-      if (distance <= closestDistance) {
-        closest = enemy;
-        closestDistance = distance;
+      if (distance > this.def.range) continue;
+      if (!best || enemy.pathProgress > best.pathProgress) {
+        best = enemy;
       }
     }
 
-    return closest;
+    return best;
   }
 }

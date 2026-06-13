@@ -6,18 +6,13 @@ const SPEED = 400; // pixels per second
 const RADIUS = 4;
 const HIT_DISTANCE = 6;
 
-const PROJECTILE_COLOR: Record<TowerDef['damageType'], number> = {
-  single: 0xffffff,
-  splash: 0xf0997b,
-};
-
 export class Projectile extends Phaser.GameObjects.Arc {
   public readonly target: Enemy;
   public readonly def: TowerDef;
   public spent = false;
 
   constructor(scene: Phaser.Scene, origin: { x: number; y: number }, target: Enemy, def: TowerDef) {
-    super(scene, origin.x, origin.y, RADIUS, 0, 360, false, PROJECTILE_COLOR[def.damageType]);
+    super(scene, origin.x, origin.y, RADIUS, 0, 360, false, def.projectileColor);
     this.target = target;
     this.def = def;
     scene.add.existing(this);
@@ -49,6 +44,9 @@ export class Projectile extends Phaser.GameObjects.Arc {
   private applyDamage(enemies: Enemy[]) {
     if (this.def.damageType === 'single' || !this.def.splashRadius) {
       this.target.takeDamage(this.def.damage, 'single');
+      if (this.def.slow) {
+        this.target.applySlow(this.def.slow.multiplier, this.def.slow.durationMs);
+      }
       return;
     }
 
@@ -56,6 +54,9 @@ export class Projectile extends Phaser.GameObjects.Arc {
       const distance = Phaser.Math.Distance.Between(this.target.x, this.target.y, enemy.x, enemy.y);
       if (distance <= this.def.splashRadius) {
         enemy.takeDamage(this.def.damage, 'splash');
+        if (this.def.slow) {
+          enemy.applySlow(this.def.slow.multiplier, this.def.slow.durationMs);
+        }
       }
     }
   }

@@ -33,7 +33,7 @@ export class Tower extends Phaser.GameObjects.Container {
     if (!target) return null;
 
     this.cooldown = 1 / this.def.fireRate;
-    return new Projectile(this.scene, { x: this.x, y: this.y }, target, this.def.damage);
+    return new Projectile(this.scene, { x: this.x, y: this.y }, target, this.def);
   }
 
   private findTarget(enemies: Enemy[]): Enemy | null {

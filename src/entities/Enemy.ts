@@ -8,6 +8,7 @@ export class Enemy extends Phaser.GameObjects.Arc {
   public reachedBase = false;
   public hp: number;
   public readonly goldReward: number;
+  public readonly armor: number;
   public isDead = false;
 
   constructor(scene: Phaser.Scene, waypoints: { x: number; y: number }[], spec: EnemySpec) {
@@ -17,6 +18,7 @@ export class Enemy extends Phaser.GameObjects.Arc {
     this.speed = spec.speed;
     this.hp = spec.hp;
     this.goldReward = spec.goldReward;
+    this.armor = spec.armor;
     scene.add.existing(this);
   }
 
@@ -42,8 +44,9 @@ export class Enemy extends Phaser.GameObjects.Arc {
     }
   }
 
-  takeDamage(amount: number) {
-    this.hp -= amount;
+  takeDamage(amount: number, damageType: 'single' | 'splash') {
+    const effective = damageType === 'single' ? Math.max(1, amount - this.armor) : amount;
+    this.hp -= effective;
     if (this.hp <= 0) {
       this.isDead = true;
     }

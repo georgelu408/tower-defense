@@ -15,13 +15,16 @@ import { resolveEnemySpec } from '../config/enemies';
 import type { EnemyType } from '../config/enemies';
 import { Tower } from '../entities/Tower';
 import { TOWER_TYPES } from '../config/towers';
+import type { TowerType } from '../config/towers';
 import type { Projectile } from '../entities/Projectile';
 import { WaveManager } from '../systems/WaveManager';
 import { WAVE_COUNT } from '../config/waves';
+import { BUILD_SLOTS } from '../config/slots';
 
 const GRASS_COLOR = 0x3b6d11;
 const PATH_COLOR = 0xba7517;
 const GRID_LINE_COLOR = 0x000000;
+const SLOT_COLOR = 0xf2d680;
 
 export class Game extends Phaser.Scene {
   private waypoints: { x: number; y: number }[] = [];
@@ -30,6 +33,8 @@ export class Game extends Phaser.Scene {
   private projectiles: Projectile[] = [];
   private pathCells = new Set<string>();
   private occupiedCells = new Set<string>();
+  private slotCells = new Set<string>();
+  private slotMarkers = new Map<string, Phaser.GameObjects.Arc>();
   private gold = STARTING_GOLD;
   private lives = STARTING_LIVES;
   private wave = 0;
@@ -57,6 +62,17 @@ export class Game extends Phaser.Scene {
     this.drawGridLines();
     this.drawMarker(SPAWN, 0x378add, 'Spawn');
     this.drawMarker(BASE, 0xe24b4a, 'Base');
+
+    for (const cell of BUILD_SLOTS) {
+      const key = cellKey(cell);
+      this.slotCells.add(key);
+      const { x, y } = cellToWorld(cell);
+      const marker = this.add.circle(x, y, GRID_SIZE * 0.35, SLOT_COLOR, 0.25);
+      marker.setStrokeStyle(2, SLOT_COLOR, 0.6);
+      this.slotMarkers.set(key, marker);
+    }
+
+    this.registry.set('selectedTowerType', 'arrow' satisfies TowerType);
 
     this.goldText = this.add.text(8, 8, '', {
       fontFamily: 'sans-serif',
@@ -120,7 +136,7 @@ export class Game extends Phaser.Scene {
     }
 
     for (const projectile of this.projectiles) {
-      projectile.update(deltaSeconds);
+      projectile.update(deltaSeconds, this.enemies);
     }
     this.projectiles = this.projectiles.filter((projectile) => {
       if (projectile.spent) {
@@ -185,15 +201,17 @@ export class Game extends Phaser.Scene {
     const cell = worldToCell(x, y);
     const key = cellKey(cell);
 
-    if (this.pathCells.has(key) || this.occupiedCells.has(key)) return;
+    if (!this.slotCells.has(key) || this.occupiedCells.has(key)) return;
 
-    const def = TOWER_TYPES.arrow;
+    const towerType = this.registry.get('selectedTowerType') as TowerType;
+    const def = TOWER_TYPES[towerType];
     if (this.gold < def.cost) return;
 
     this.gold -= def.cost;
     this.refreshHud();
 
     this.occupiedCells.add(key);
+    this.slotMarkers.get(key)?.setVisible(false);
     this.towers.push(new Tower(this, cell, cellToWorld(cell), def));
   }
 

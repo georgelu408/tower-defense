@@ -1,24 +1,29 @@
 import Phaser from 'phaser';
 import type { Enemy } from './Enemy';
+import type { TowerDef } from '../config/towers';
 
 const SPEED = 400; // pixels per second
 const RADIUS = 4;
-const COLOR = 0xffffff;
 const HIT_DISTANCE = 6;
+
+const PROJECTILE_COLOR: Record<TowerDef['damageType'], number> = {
+  single: 0xffffff,
+  splash: 0xf0997b,
+};
 
 export class Projectile extends Phaser.GameObjects.Arc {
   public readonly target: Enemy;
-  public readonly damage: number;
+  public readonly def: TowerDef;
   public spent = false;
 
-  constructor(scene: Phaser.Scene, origin: { x: number; y: number }, target: Enemy, damage: number) {
-    super(scene, origin.x, origin.y, RADIUS, 0, 360, false, COLOR);
+  constructor(scene: Phaser.Scene, origin: { x: number; y: number }, target: Enemy, def: TowerDef) {
+    super(scene, origin.x, origin.y, RADIUS, 0, 360, false, PROJECTILE_COLOR[def.damageType]);
     this.target = target;
-    this.damage = damage;
+    this.def = def;
     scene.add.existing(this);
   }
 
-  update(deltaSeconds: number) {
+  update(deltaSeconds: number, enemies: Enemy[]) {
     if (this.spent) return;
 
     if (this.target.isDead) {
@@ -31,7 +36,7 @@ export class Projectile extends Phaser.GameObjects.Arc {
     const distance = Math.hypot(dx, dy);
 
     if (distance <= HIT_DISTANCE) {
-      this.target.takeDamage(this.damage);
+      this.applyDamage(enemies);
       this.spent = true;
       return;
     }
@@ -39,5 +44,19 @@ export class Projectile extends Phaser.GameObjects.Arc {
     const step = SPEED * deltaSeconds;
     this.x += (dx / distance) * step;
     this.y += (dy / distance) * step;
+  }
+
+  private applyDamage(enemies: Enemy[]) {
+    if (this.def.damageType === 'single' || !this.def.splashRadius) {
+      this.target.takeDamage(this.def.damage, 'single');
+      return;
+    }
+
+    for (const enemy of enemies) {
+      const distance = Phaser.Math.Distance.Between(this.target.x, this.target.y, enemy.x, enemy.y);
+      if (distance <= this.def.splashRadius) {
+        enemy.takeDamage(this.def.damage, 'splash');
+      }
+    }
   }
 }

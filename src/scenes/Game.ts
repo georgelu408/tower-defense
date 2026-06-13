@@ -6,6 +6,7 @@ import { Enemy } from '../entities/Enemy';
 import { ENEMY_TYPES } from '../config/enemies';
 import { Tower } from '../entities/Tower';
 import { TOWER_TYPES } from '../config/towers';
+import type { Projectile } from '../entities/Projectile';
 
 const GRASS_COLOR = 0x3b6d11;
 const PATH_COLOR = 0xba7517;
@@ -15,8 +16,12 @@ const SPAWN_INTERVAL_MS = 2000;
 export class Game extends Phaser.Scene {
   private waypoints: { x: number; y: number }[] = [];
   private enemies: Enemy[] = [];
+  private towers: Tower[] = [];
+  private projectiles: Projectile[] = [];
   private pathCells = new Set<string>();
   private occupiedCells = new Set<string>();
+  private gold = 0;
+  private goldText!: Phaser.GameObjects.Text;
 
   constructor() {
     super('Game');
@@ -35,6 +40,12 @@ export class Game extends Phaser.Scene {
     this.drawGridLines();
     this.drawMarker(SPAWN, 0x378add, 'Spawn');
     this.drawMarker(BASE, 0xe24b4a, 'Base');
+
+    this.goldText = this.add.text(8, 8, 'Gold: 0', {
+      fontFamily: 'sans-serif',
+      fontSize: '16px',
+      color: '#ffffff',
+    });
 
     this.waypoints = PATH.map(cellToWorld);
 
@@ -56,13 +67,41 @@ export class Game extends Phaser.Scene {
       enemy.update(deltaSeconds);
     }
 
+    for (const tower of this.towers) {
+      const projectile = tower.update(deltaSeconds, this.enemies);
+      if (projectile) {
+        this.projectiles.push(projectile);
+      }
+    }
+
+    for (const projectile of this.projectiles) {
+      projectile.update(deltaSeconds);
+    }
+    this.projectiles = this.projectiles.filter((projectile) => {
+      if (projectile.spent) {
+        projectile.destroy();
+        return false;
+      }
+      return true;
+    });
+
     this.enemies = this.enemies.filter((enemy) => {
+      if (enemy.isDead) {
+        this.addGold(enemy.goldReward);
+        enemy.destroy();
+        return false;
+      }
       if (enemy.reachedBase) {
         enemy.destroy();
         return false;
       }
       return true;
     });
+  }
+
+  private addGold(amount: number) {
+    this.gold += amount;
+    this.goldText.setText(`Gold: ${this.gold}`);
   }
 
   private tryPlaceTower(x: number, y: number) {
@@ -74,7 +113,7 @@ export class Game extends Phaser.Scene {
     if (this.pathCells.has(key) || this.occupiedCells.has(key)) return;
 
     this.occupiedCells.add(key);
-    new Tower(this, cell, cellToWorld(cell), TOWER_TYPES.arrow);
+    this.towers.push(new Tower(this, cell, cellToWorld(cell), TOWER_TYPES.arrow));
   }
 
   private spawnEnemy() {

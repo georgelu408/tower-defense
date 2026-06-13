@@ -6,12 +6,17 @@ export class Enemy extends Phaser.GameObjects.Arc {
   private waypointIndex = 1;
   private speed: number;
   public reachedBase = false;
+  public hp: number;
+  public readonly goldReward: number;
+  public isDead = false;
 
   constructor(scene: Phaser.Scene, waypoints: { x: number; y: number }[], def: EnemyDef) {
     const start = waypoints[0];
     super(scene, start.x, start.y, def.radius, 0, 360, false, def.color);
     this.waypoints = waypoints;
     this.speed = def.speed;
+    this.hp = def.hp;
+    this.goldReward = def.goldReward;
     scene.add.existing(this);
   }
 
@@ -34,6 +39,13 @@ export class Enemy extends Phaser.GameObjects.Arc {
     } else {
       this.x += (dx / distance) * step;
       this.y += (dy / distance) * step;
+    }
+  }
+
+  takeDamage(amount: number) {
+    this.hp -= amount;
+    if (this.hp <= 0) {
+      this.isDead = true;
     }
   }
 }

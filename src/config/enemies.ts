@@ -3,6 +3,7 @@ export interface EnemyDef {
   hp: number;
   radius: number;
   color: number;
+  goldReward: number;
 }
 
 export const ENEMY_TYPES = {
@@ -11,6 +12,7 @@ export const ENEMY_TYPES = {
     hp: 10,
     radius: 12,
     color: 0xd4537e,
+    goldReward: 5,
   },
 } as const satisfies Record<string, EnemyDef>;
 

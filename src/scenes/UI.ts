@@ -7,9 +7,12 @@ const BUTTON_WIDTH = 150;
 const BUTTON_HEIGHT = 96;
 const BUTTON_COLOR = 0x3f3f3a;
 const BUTTON_SELECTED_COLOR = 0x5d7a3a;
+const PAUSE_BUTTON_WIDTH = 110;
+const PAUSE_BUTTON_HEIGHT = 48;
 
 export class UI extends Phaser.Scene {
   private buttons = new Map<TowerType, Phaser.GameObjects.Rectangle>();
+  private pauseLabel!: Phaser.GameObjects.Text;
 
   constructor() {
     super('UI');
@@ -72,6 +75,30 @@ export class UI extends Phaser.Scene {
 
     this.refreshSelection();
     this.registry.events.on('changedata-selectedTowerType', () => this.refreshSelection());
+
+    const pauseX = BOARD_WIDTH - 20 - PAUSE_BUTTON_WIDTH / 2;
+    const pauseButton = this.add
+      .rectangle(pauseX, y, PAUSE_BUTTON_WIDTH, PAUSE_BUTTON_HEIGHT, BUTTON_COLOR)
+      .setStrokeStyle(2, 0xffffff, 0.3)
+      .setInteractive({ useHandCursor: true });
+
+    this.pauseLabel = this.add
+      .text(pauseX, y, 'Pause', {
+        fontFamily: 'sans-serif',
+        fontSize: '16px',
+        color: '#ffffff',
+      })
+      .setOrigin(0.5);
+
+    pauseButton.on('pointerdown', () => {
+      if (this.scene.isPaused('Game')) {
+        this.scene.resume('Game');
+        this.pauseLabel.setText('Pause');
+      } else {
+        this.scene.pause('Game');
+        this.pauseLabel.setText('Resume');
+      }
+    });
   }
 
   private refreshSelection() {

@@ -2,12 +2,18 @@ import Phaser from 'phaser';
 import { BOARD_WIDTH, BOARD_HEIGHT, GRID_SIZE, GRID_COLS, GRID_ROWS } from '../config/constants';
 import { PATH, SPAWN, BASE } from '../config/level';
 import { cellToWorld } from '../systems/Grid';
+import { Enemy } from '../entities/Enemy';
+import { ENEMY_TYPES } from '../config/enemies';
 
 const GRASS_COLOR = 0x3b6d11;
 const PATH_COLOR = 0xba7517;
 const GRID_LINE_COLOR = 0x000000;
+const SPAWN_INTERVAL_MS = 2000;
 
 export class Game extends Phaser.Scene {
+  private waypoints: { x: number; y: number }[] = [];
+  private enemies: Enemy[] = [];
+
   constructor() {
     super('Game');
   }
@@ -24,6 +30,35 @@ export class Game extends Phaser.Scene {
     this.drawGridLines();
     this.drawMarker(SPAWN, 0x378add, 'Spawn');
     this.drawMarker(BASE, 0xe24b4a, 'Base');
+
+    this.waypoints = PATH.map(cellToWorld);
+
+    this.time.addEvent({
+      delay: SPAWN_INTERVAL_MS,
+      loop: true,
+      callback: () => this.spawnEnemy(),
+    });
+  }
+
+  update(_time: number, deltaMs: number) {
+    const deltaSeconds = deltaMs / 1000;
+
+    for (const enemy of this.enemies) {
+      enemy.update(deltaSeconds);
+    }
+
+    this.enemies = this.enemies.filter((enemy) => {
+      if (enemy.reachedBase) {
+        enemy.destroy();
+        return false;
+      }
+      return true;
+    });
+  }
+
+  private spawnEnemy() {
+    const enemy = new Enemy(this, this.waypoints, ENEMY_TYPES.grunt);
+    this.enemies.push(enemy);
   }
 
   private drawGridLines() {

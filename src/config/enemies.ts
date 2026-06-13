@@ -1,19 +1,44 @@
-export interface EnemyDef {
-  speed: number; // pixels per second
+export interface EnemyTypeDef {
+  hpMultiplier: number;
+  speedMultiplier: number;
+  radius: number;
+  color: number;
+}
+
+export const BASE_SPEED = 80; // pixels per second, at speedMultiplier 1
+
+export const ENEMY_TYPES = {
+  grunt: {
+    hpMultiplier: 1,
+    speedMultiplier: 1,
+    radius: 12,
+    color: 0xd4537e,
+  },
+  tank: {
+    hpMultiplier: 2,
+    speedMultiplier: 0.7,
+    radius: 16,
+    color: 0x7f77dd,
+  },
+} as const satisfies Record<string, EnemyTypeDef>;
+
+export type EnemyType = keyof typeof ENEMY_TYPES;
+
+export interface EnemySpec {
   hp: number;
+  speed: number;
   radius: number;
   color: number;
   goldReward: number;
 }
 
-export const ENEMY_TYPES = {
-  grunt: {
-    speed: 80,
-    hp: 10,
-    radius: 12,
-    color: 0xd4537e,
-    goldReward: 5,
-  },
-} as const satisfies Record<string, EnemyDef>;
-
-export type EnemyType = keyof typeof ENEMY_TYPES;
+export function resolveEnemySpec(type: EnemyType, baseHP: number, goldReward: number): EnemySpec {
+  const def = ENEMY_TYPES[type];
+  return {
+    hp: Math.round(baseHP * def.hpMultiplier),
+    speed: BASE_SPEED * def.speedMultiplier,
+    radius: def.radius,
+    color: def.color,
+    goldReward,
+  };
+}

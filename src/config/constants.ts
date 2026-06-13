@@ -8,3 +8,6 @@ export const GAME_HEIGHT = BOARD_HEIGHT + UI_BAR_HEIGHT;
 export const GRID_SIZE = 60;
 export const GRID_COLS = BOARD_WIDTH / GRID_SIZE;
 export const GRID_ROWS = BOARD_HEIGHT / GRID_SIZE;
+
+export const STARTING_GOLD = 100;
+export const STARTING_LIVES = 20;

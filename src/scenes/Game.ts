@@ -1,17 +1,27 @@
 import Phaser from 'phaser';
-import { BOARD_WIDTH, BOARD_HEIGHT, GRID_SIZE, GRID_COLS, GRID_ROWS } from '../config/constants';
+import {
+  BOARD_WIDTH,
+  BOARD_HEIGHT,
+  GRID_SIZE,
+  GRID_COLS,
+  GRID_ROWS,
+  STARTING_GOLD,
+  STARTING_LIVES,
+} from '../config/constants';
 import { PATH, SPAWN, BASE } from '../config/level';
 import { cellToWorld, cellKey, worldToCell } from '../systems/Grid';
 import { Enemy } from '../entities/Enemy';
-import { ENEMY_TYPES } from '../config/enemies';
+import { resolveEnemySpec } from '../config/enemies';
+import type { EnemyType } from '../config/enemies';
 import { Tower } from '../entities/Tower';
 import { TOWER_TYPES } from '../config/towers';
 import type { Projectile } from '../entities/Projectile';
+import { WaveManager } from '../systems/WaveManager';
+import { WAVE_COUNT } from '../config/waves';
 
 const GRASS_COLOR = 0x3b6d11;
 const PATH_COLOR = 0xba7517;
 const GRID_LINE_COLOR = 0x000000;
-const SPAWN_INTERVAL_MS = 2000;
 
 export class Game extends Phaser.Scene {
   private waypoints: { x: number; y: number }[] = [];
@@ -20,8 +30,15 @@ export class Game extends Phaser.Scene {
   private projectiles: Projectile[] = [];
   private pathCells = new Set<string>();
   private occupiedCells = new Set<string>();
-  private gold = 0;
+  private gold = STARTING_GOLD;
+  private lives = STARTING_LIVES;
+  private wave = 0;
+  private allWavesSpawned = false;
+  private gameOver = false;
   private goldText!: Phaser.GameObjects.Text;
+  private livesText!: Phaser.GameObjects.Text;
+  private waveText!: Phaser.GameObjects.Text;
+  private statusText!: Phaser.GameObjects.Text;
 
   constructor() {
     super('Game');
@@ -41,19 +58,45 @@ export class Game extends Phaser.Scene {
     this.drawMarker(SPAWN, 0x378add, 'Spawn');
     this.drawMarker(BASE, 0xe24b4a, 'Base');
 
-    this.goldText = this.add.text(8, 8, 'Gold: 0', {
+    this.goldText = this.add.text(8, 8, '', {
       fontFamily: 'sans-serif',
       fontSize: '16px',
       color: '#ffffff',
     });
+    this.livesText = this.add.text(8, 28, '', {
+      fontFamily: 'sans-serif',
+      fontSize: '16px',
+      color: '#ffffff',
+    });
+    this.waveText = this.add.text(8, 48, '', {
+      fontFamily: 'sans-serif',
+      fontSize: '16px',
+      color: '#ffffff',
+    });
+    this.statusText = this.add
+      .text(BOARD_WIDTH / 2, BOARD_HEIGHT / 2, '', {
+        fontFamily: 'sans-serif',
+        fontSize: '32px',
+        color: '#ffffff',
+        align: 'center',
+      })
+      .setOrigin(0.5);
+
+    this.refreshHud();
 
     this.waypoints = PATH.map(cellToWorld);
 
-    this.time.addEvent({
-      delay: SPAWN_INTERVAL_MS,
-      loop: true,
-      callback: () => this.spawnEnemy(),
-    });
+    new WaveManager(
+      this,
+      (type, baseHP, goldReward) => this.spawnEnemy(type, baseHP, goldReward),
+      (wave) => {
+        this.wave = wave;
+        this.refreshHud();
+      },
+      () => {
+        this.allWavesSpawned = true;
+      },
+    ).start();
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       this.tryPlaceTower(pointer.x, pointer.y);
@@ -61,6 +104,8 @@ export class Game extends Phaser.Scene {
   }
 
   update(_time: number, deltaMs: number) {
+    if (this.gameOver) return;
+
     const deltaSeconds = deltaMs / 1000;
 
     for (const enemy of this.enemies) {
@@ -93,18 +138,48 @@ export class Game extends Phaser.Scene {
       }
       if (enemy.reachedBase) {
         enemy.destroy();
+        this.loseLife();
         return false;
       }
       return true;
     });
+
+    if (!this.gameOver && this.allWavesSpawned && this.enemies.length === 0) {
+      this.win();
+    }
   }
 
   private addGold(amount: number) {
     this.gold += amount;
+    this.refreshHud();
+  }
+
+  private loseLife() {
+    this.lives -= 1;
+    this.refreshHud();
+    if (this.lives <= 0) {
+      this.lose();
+    }
+  }
+
+  private win() {
+    this.gameOver = true;
+    this.statusText.setText('You win!');
+  }
+
+  private lose() {
+    this.gameOver = true;
+    this.statusText.setText('Game over');
+  }
+
+  private refreshHud() {
     this.goldText.setText(`Gold: ${this.gold}`);
+    this.livesText.setText(`Lives: ${this.lives}`);
+    this.waveText.setText(`Wave: ${this.wave} / ${WAVE_COUNT}`);
   }
 
   private tryPlaceTower(x: number, y: number) {
+    if (this.gameOver) return;
     if (x < 0 || y < 0 || x >= BOARD_WIDTH || y >= BOARD_HEIGHT) return;
 
     const cell = worldToCell(x, y);
@@ -112,12 +187,19 @@ export class Game extends Phaser.Scene {
 
     if (this.pathCells.has(key) || this.occupiedCells.has(key)) return;
 
+    const def = TOWER_TYPES.arrow;
+    if (this.gold < def.cost) return;
+
+    this.gold -= def.cost;
+    this.refreshHud();
+
     this.occupiedCells.add(key);
-    this.towers.push(new Tower(this, cell, cellToWorld(cell), TOWER_TYPES.arrow));
+    this.towers.push(new Tower(this, cell, cellToWorld(cell), def));
   }
 
-  private spawnEnemy() {
-    const enemy = new Enemy(this, this.waypoints, ENEMY_TYPES.grunt);
+  private spawnEnemy(type: EnemyType, baseHP: number, goldReward: number) {
+    const spec = resolveEnemySpec(type, baseHP, goldReward);
+    const enemy = new Enemy(this, this.waypoints, spec);
     this.enemies.push(enemy);
   }
 

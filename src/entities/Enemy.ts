@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import type { EnemyDef } from '../config/enemies';
+import type { EnemySpec } from '../config/enemies';
 
 export class Enemy extends Phaser.GameObjects.Arc {
   private waypoints: { x: number; y: number }[];
@@ -10,13 +10,13 @@ export class Enemy extends Phaser.GameObjects.Arc {
   public readonly goldReward: number;
   public isDead = false;
 
-  constructor(scene: Phaser.Scene, waypoints: { x: number; y: number }[], def: EnemyDef) {
+  constructor(scene: Phaser.Scene, waypoints: { x: number; y: number }[], spec: EnemySpec) {
     const start = waypoints[0];
-    super(scene, start.x, start.y, def.radius, 0, 360, false, def.color);
+    super(scene, start.x, start.y, spec.radius, 0, 360, false, spec.color);
     this.waypoints = waypoints;
-    this.speed = def.speed;
-    this.hp = def.hp;
-    this.goldReward = def.goldReward;
+    this.speed = spec.speed;
+    this.hp = spec.hp;
+    this.goldReward = spec.goldReward;
     scene.add.existing(this);
   }
 

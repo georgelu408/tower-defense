@@ -20,6 +20,9 @@ export class Enemy extends Phaser.GameObjects.Container {
   public isDead = false;
   /** Cumulative distance traveled along the path, used to find the enemy closest to the base. */
   public pathProgress = 0;
+  public readonly color: number;
+  public readonly radius: number;
+  private hitFlash: Phaser.GameObjects.Arc;
 
   constructor(scene: Phaser.Scene, waypoints: { x: number; y: number }[], spec: EnemySpec) {
     const start = waypoints[0];
@@ -30,8 +33,11 @@ export class Enemy extends Phaser.GameObjects.Container {
     this.maxHp = spec.hp;
     this.goldReward = spec.goldReward;
     this.armor = spec.armor;
+    this.color = spec.color;
+    this.radius = spec.radius;
 
     const body = scene.add.circle(0, 0, spec.radius, spec.color);
+    this.hitFlash = scene.add.circle(0, 0, spec.radius, 0xffffff, 0);
     this.hpBarWidth = spec.radius * 2;
     const barY = -spec.radius - HP_BAR_OFFSET;
     const hpBarBg = scene.add
@@ -41,7 +47,7 @@ export class Enemy extends Phaser.GameObjects.Container {
       .rectangle(-this.hpBarWidth / 2, barY, this.hpBarWidth, HP_BAR_HEIGHT, 0x4ade80)
       .setOrigin(0, 0.5);
 
-    this.add([body, hpBarBg, this.hpBarFill]);
+    this.add([body, this.hitFlash, hpBarBg, this.hpBarFill]);
     scene.add.existing(this);
   }
 
@@ -88,5 +94,12 @@ export class Enemy extends Phaser.GameObjects.Container {
       this.isDead = true;
     }
     this.hpBarFill.width = this.hpBarWidth * Math.max(0, this.hp / this.maxHp);
+
+    this.hitFlash.setAlpha(0.7);
+    this.scene.tweens.add({
+      targets: this.hitFlash,
+      alpha: 0,
+      duration: 120,
+    });
   }
 }

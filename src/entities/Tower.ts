@@ -17,10 +17,18 @@ export class Tower extends Phaser.GameObjects.Container {
 
     this.rangeCircle = scene.add.circle(0, 0, def.range, 0xffffff, 0.08);
     this.rangeCircle.setStrokeStyle(1, 0xffffff, 0.25);
+    this.rangeCircle.setVisible(false);
 
     const body = scene.add.circle(0, 0, def.radius, def.color);
 
     this.add([this.rangeCircle, body]);
+    this.setInteractive(new Phaser.Geom.Circle(0, 0, def.radius), Phaser.Geom.Circle.Contains);
+    this.on('pointerover', () => {
+      this.rangeCircle.setVisible(true);
+    });
+    this.on('pointerout', () => {
+      this.rangeCircle.setVisible(false);
+    });
     scene.add.existing(this);
   }
 

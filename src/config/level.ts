@@ -60,8 +60,7 @@ export const PATH: Cell[] = [
   { col: 14, row: 5 },
   // Connector down to base
   { col: 14, row: 6 },
-  { col: 14, row: 7 },
-  { col: 15, row: 7 },
+  { col: 15, row: 6 },
 ];
 
 export const SPAWN: Cell = PATH[0];

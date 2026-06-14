@@ -19,20 +19,20 @@ export const ENEMY_TYPES = {
     goldMultiplier: 1,
   },
   tank: {
-    hpMultiplier: 2,
+    hpMultiplier: 3,
     speedMultiplier: 0.7,
     radius: 16,
     color: 0x7f77dd,
-    armor: 3,
-    goldMultiplier: 1.5,
+    armor: 5,
+    goldMultiplier: 1.75,
   },
   fast: {
-    hpMultiplier: 0.5,
+    hpMultiplier: 1,
     speedMultiplier: 1.8,
     radius: 9,
     color: 0xf2c14e,
     armor: 0,
-    goldMultiplier: 0.75,
+    goldMultiplier: 0.9,
   },
 } as const satisfies Record<string, EnemyTypeDef>;
 

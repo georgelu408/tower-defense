@@ -21,7 +21,7 @@ export class Projectile extends Phaser.GameObjects.Arc {
   update(deltaSeconds: number, enemies: Enemy[]) {
     if (this.spent) return;
 
-    if (this.target.isDead) {
+    if (this.target.isDead || !this.target.active) {
       this.spent = true;
       return;
     }
@@ -39,6 +39,19 @@ export class Projectile extends Phaser.GameObjects.Arc {
     const step = SPEED * deltaSeconds;
     this.x += (dx / distance) * step;
     this.y += (dy / distance) * step;
+
+    this.spawnTrailDot();
+  }
+
+  private spawnTrailDot() {
+    const dot = this.scene.add.circle(this.x, this.y, RADIUS * 0.7, this.def.projectileColor, 0.5);
+    this.scene.tweens.add({
+      targets: dot,
+      alpha: 0,
+      scale: 0.3,
+      duration: 150,
+      onComplete: () => dot.destroy(),
+    });
   }
 
   private applyDamage(enemies: Enemy[]) {

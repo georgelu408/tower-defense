@@ -1,9 +1,10 @@
 export const BOARD_WIDTH = 960;
-export const BOARD_HEIGHT = 480;
-export const UI_BAR_HEIGHT = 120;
+export const BOARD_HEIGHT = 420;
+export const UI_BAR_HEIGHT = 80;
+export const HUD_BAR_HEIGHT = 44;
 
 export const GAME_WIDTH = BOARD_WIDTH;
-export const GAME_HEIGHT = BOARD_HEIGHT + UI_BAR_HEIGHT;
+export const GAME_HEIGHT = HUD_BAR_HEIGHT + BOARD_HEIGHT + UI_BAR_HEIGHT;
 
 export const GRID_SIZE = 60;
 export const GRID_COLS = BOARD_WIDTH / GRID_SIZE;

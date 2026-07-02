@@ -1,3 +1,5 @@
+**Live app:** [georgelu408.github.io/tower-defense](https://georgelu408.github.io/tower-defense/)
+
 # Tower Defense
 
 A browser-based tower defense game built with [Phaser 3](https://phaser.io/) and TypeScript.
